@@ -1,0 +1,130 @@
+---
+title: "Příklad parametrického reportu"
+params:
+  kraj: 3026 # default pro debugging (Středočeský kraj)
+  datum: "2016-04-15" # default pro debugging (tenhle den v datech je)
+output:
+  html_document:
+    df_print: paged
+    toc: true
+  pdf_document:
+    latex_engine: xelatex
+    template: Report.tex
+---
+
+```{r setup, echo = F, message = F}
+library(tidyverse)  # protože Tidyverse :)
+library(readr)      # načtení csvčka
+library(scales)     # pro koruny na osách
+library(knitr)      # pro základní tabulky
+library(kableExtra) # pro *hezké* tabulky
+library(lubridate)  # pro práci s datumy
+
+pivo <- read_csv2("../data/potraviny.csv") %>% # dvě tečky, protože root projektu
+  filter(reprcen_kod == '0213201')  # pivo!
+
+rozhodne_datum <- as.Date(params$datum) # dodaný parametr - datum
+rozhodny_kraj <- params$kraj # dodaný parametr - kraj
+
+format_kc <- function(hodnota) { # pomocná funkce: převede číslo na hezký, český text
+  
+  asdf <- paste(formatC(hodnota,
+                        decimal.mark = ",",
+                        format = "f", digits = 2), 
+                "Kč")
+  asdf
+  
+}
+
+```
+
+Toto je parametrický report, ukazuje:
+
+- přehled ceny piva po krajích k rozhodnému datu (kde rozhodné datum je parametr)
+
+- graf historie ceny piva v konkrétním kraji (postupně všech 14) k rozhodnému datu a předcházejícím roce
+
+<hr>
+
+## Souhrnná tabulka
+
+```{r tabulka, echo = F, warning = F}
+
+map_src <- pivo %>% 
+  filter(obdobido > rozhodne_datum &rozhodne_datum >= obdobiod) 
+
+republikovy_prumer <- map_src %>% 
+  filter(uzemi_kod == 19) %>% # republika jako celek only
+  pull(hodnota) # jedna hodnota (ne data.frame)
+  
+map_src <- map_src %>% 
+  filter(uzemi_kod != 19) %>%  # kromě republiky jako celku%>% 
+  select(uzemi_txt, hodnota) %>% # vybrat jen relevantní
+  rbind(list("Republika jako celek", republikovy_prumer)) %>% # doplnit součtový řádek
+  mutate(hodnota = format_kc(hodnota)) # hodnoty jako text v korunách
+
+colnames(map_src) <- c("Kraj", "cena piva") # hezké názvy sloupců
+
+kable(map_src, # tabulka - zdrojem je data.frame map_src
+      booktabs = T, # má smysl pouze pro pdf výstup
+      caption = paste("Krajská cena piva k", format(rozhodne_datum, "%d. %m. %Y")),
+      align = c('l', 'r')) %>% # zarovnání - text doleva, čísla doprava
+  kable_styling(full_width = T) %>% # na celou stránku
+  column_spec(1, width = "6cm") %>% # první sloupec široký
+  row_spec(nrow(map_src), bold = T) # poslední řádek tučně
+
+```
+
+Tato tabulka je stejná ve všech 14 reportech.
+
+## Detailní graf
+
+```{r chart, echo = F, warning = F, out.width = '100%'}
+
+chrt_src <- pivo %>% 
+  filter(rozhodne_datum  >= obdobiod # ne mladší, jak rozhodné datum
+         & obdobido > rozhodne_datum- months(12)) %>% # ne starší, jak rok
+  filter(uzemi_kod == 19 | uzemi_kod == rozhodny_kraj) %>% 
+  mutate(obdobi = obdobiod + (obdobido - obdobiod)/2) %>% 
+  select(obdobi, uzemi_txt, hodnota)
+
+posledni <- chrt_src %>% 
+  arrange(desc(obdobi)) %>% # sestupně dle období
+  slice(1:2) # poslední dvě hodnoty = republika a hledaný kraj
+
+graf <- chrt_src %>% 
+  ggplot() +
+  geom_line(aes(x = obdobi, y = hodnota, color = uzemi_txt), # tlusté čáry
+            lwd = 2) +
+  scale_color_manual(values = c("grey80", "darkgoldenrod2")) + # barevná škála
+  geom_point(data = posledni, # kolečka na konci 
+             aes(x = obdobi, y = hodnota, color = uzemi_txt), 
+             shape = 21, 
+             fill = "white", 
+             size = 3, 
+             stroke = 2) +
+   geom_text(data = posledni, # popiska ke kolečkům - na střed a doprava
+             aes(x = obdobi, 
+                 y = hodnota, 
+                 label = format_kc(hodnota)), 
+             size = 3, 
+             fontface = "bold",
+             hjust = -.3,
+             vjust = 0.5) +
+  scale_y_continuous(labels = dollar_format(prefix = "", # osa y - v kačkách
+                                            suffix = " Kč", 
+                                            decimal.mark = ",")) +
+  scale_x_date(limits = c(floor_date(min(chrt_src$obdobi), # osa x - datum jako měsíc
+                                     unit= "month"), 
+                          max(chrt_src$obdobi) + months(2))) +
+  labs(title = "Vývoj ceny piva", # popisky - titulek a podtitulek
+       subtitle = paste("počítáno ke dni", format(rozhodne_datum, "%d. %m. %Y")),
+       color = "") +
+  theme_minimal() +
+  theme(axis.title = element_blank()) # bez popisu os - jsou zjevné
+
+plot(graf)
+
+```
+
+Srovnání s průměrem republiky je pro každý kraj zvlášť.

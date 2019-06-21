@@ -1,0 +1,1 @@
+Do složky /output budou skriptem uloženy výstupní soubory

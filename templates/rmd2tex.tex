@@ -1,0 +1,80 @@
+\documentclass[twoside]{report}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{fontspec}
+\usepackage{titling}
+\usepackage[sfdefault]{roboto} % Roboto - jde na něj koukat, a funguje ve Windows i Linuxu
+\usepackage[setpagesize=false, 
+            unicode=false, 
+            colorlinks=true, 
+            urlcolor=blue, 
+            linkcolor=black]{hyperref} 
+\usepackage[a4paper, 
+            left=2cm,
+            right=2cm,
+            top=2.5cm,
+            bottom=2.5cm,
+            footskip=1.25cm]{geometry}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage[table]{xcolor}
+\usepackage{wrapfig}
+\usepackage{float}
+\usepackage{colortbl}
+\usepackage{pdflscape}
+\usepackage{tabu}
+\usepackage{threeparttable}
+\usepackage{etoolbox}
+
+$if(highlighting-macros)$
+$highlighting-macros$
+$endif$
+
+\setmonofont[ % font fira code - pro správné ligatury v kódu <- etc...
+  Contextuals={Alternate}
+]{Fira Code}
+
+\makeatletter
+\def\verbatim@nolig@list{}
+\makeatother
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{1em plus 2pt minus 1pt}
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+
+\patchcmd{\figure}{\normalsize}{\normalsize\centering}{}{} % vycentrovaný obrázek
+
+\newcommand{\Nazev}{$if(title)$ {$title$} $else$ {Bezejmenný report} $endif$} % Název reportu (nebo hláška, že není)
+
+\newcommand{\Paticka}{$if(date)$ {$date$} $endif$} % patička - když datum tak datum; mezi tím mezera
+
+\renewcommand{\baselinestretch}{1.05} % menší, ale platné mezery mezi řádky 
+
+\providecommand{\tightlist}{\setlength{\parskip}{0pt}} % definovat \tightlist, aby pandoc nepadal...
+
+\pagestyle{fancy}
+
+\makeatletter % bez číslování nadpisů (sekcí)
+\renewcommand{\@seccntformat}[1]{}
+\makeatother
+
+\raggedbottom % aby obrázek nerozhodil předchozí stránku...
+
+\begin{document}
+
+\fancyhf{} % sets both header and footer to nothing
+\renewcommand{\headrulewidth}{0pt} % pryč se zbytečnou čárou!
+
+\fancyfoot[RE,RO]{\footnotesize\textit\thepage} % vnější patička - číslo stránky
+\fancyfoot[CE,CO]{} % prostřední patička - prázdná
+\fancyfoot[LE,LO]{\footnotesize\textit\Paticka} % vnitřní patička - datum
+
+\begin{center} % titulek s podtržítkem
+\fontseries{bx}{\LARGE\Nazev} \end{center}
+\vspace{-17pt}\noindent\hfil\rule{.8\textwidth}{.25pt}\hfil % podtržení pod titulkem, ne přes celou stranu a ne moc tlusté
+
+$body$ % vlastní text z Markdownu
+
+\end{document} 

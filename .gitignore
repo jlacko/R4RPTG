@@ -34,3 +34,14 @@ vignettes/*.pdf
 
 # Shiny token, see https://shiny.rstudio.com/articles/shinyapps.html
 rsconnect/
+
+# adresář s daty (plní se dle potřeby)
+data/*
+!data/data.txt
+
+# vyrenderované soubory
+*.html
+*.pdf
+*.log
+
+
