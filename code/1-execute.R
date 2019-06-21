@@ -32,8 +32,10 @@ for (i in seq_along(kraje)) { # tj. od jedničky do čtrnáckty
                         datum = datum), 
           knit_root_dir = "./", # cesty vedou z rootu projektu
           output_format = "html_document", # výstup je html
+   #       output_format = "pdf_document", # alternativa vyžadující LaTeX
           output_dir = "./output", # kam uložit?
           output_file = paste0(kraj, '.html'), # cílový soubor
+   #       output_file = paste0(kraj, '.pdf'), # cílový soubor
           encoding = 'UTF-8', # pro češtinu důležité
           quiet = T) # nemusím číst všechno...  
 }

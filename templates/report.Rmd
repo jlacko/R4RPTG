@@ -4,12 +4,12 @@ params:
   kraj: 3026 # default pro debugging (Středočeský kraj)
   datum: "2016-04-15" # default pro debugging (tenhle den v datech je)
 output:
+  pdf_document:
+    latex_engine: xelatex
+    template: rmd2tex.tex
   html_document:
     df_print: paged
     toc: true
-  pdf_document:
-    latex_engine: xelatex
-    template: Report.tex
 ---
 
 ```{r setup, echo = F, message = F}
@@ -19,6 +19,9 @@ library(scales)     # pro koruny na osách
 library(knitr)      # pro základní tabulky
 library(kableExtra) # pro *hezké* tabulky
 library(lubridate)  # pro práci s datumy
+
+pdf.options(encoding = 'ISOLatin2.enc') # aby se tisklo hezky česky...
+
 
 pivo <- read_csv2("../data/potraviny.csv") %>% # dvě tečky, protože root projektu
   filter(reprcen_kod == '0213201')  # pivo!
@@ -66,10 +69,13 @@ map_src <- map_src %>%
 colnames(map_src) <- c("Kraj", "cena piva") # hezké názvy sloupců
 
 kable(map_src, # tabulka - zdrojem je data.frame map_src
-      booktabs = T, # má smysl pouze pro pdf výstup
+ #     format = 'latex', # má smysl pouze pro pdf, html rozbíjí...
+      booktabs = T, # má smysl pouze pro pdf, ale v html nevadí
+      linesep = "", # aby nebyl každý 5. řádek prázdný
       caption = paste("Krajská cena piva k", format(rozhodne_datum, "%d. %m. %Y")),
       align = c('l', 'r')) %>% # zarovnání - text doleva, čísla doprava
-  kable_styling(full_width = T) %>% # na celou stránku
+  kable_styling(full_width = T, # na celou stránku
+                latex_options = "hold_position") %>% # pro pdf, html nevadí...
   column_spec(1, width = "6cm") %>% # první sloupec široký
   row_spec(nrow(map_src), bold = T) # poslední řádek tučně
 
