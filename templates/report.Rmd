@@ -41,9 +41,9 @@ format_kc <- function(hodnota) { # pomocná funkce: převede číslo na hezký, 
 
 ```
 
-Toto je parametrický report, ukazuje:
+Toto je parametrický report, který ukazuje:
 
-- přehled ceny piva po krajích k rozhodnému datu (kde rozhodné datum je parametr)
+- tabulku ceny piva po krajích k rozhodnému datu (kde rozhodné datum je parametr)
 
 - graf historie ceny piva v konkrétním kraji (postupně všech 14) k rozhodnému datu a předcházejícím roce
 
@@ -82,6 +82,8 @@ kable(map_src, # tabulka - zdrojem je data.frame map_src
 ```
 
 Tato tabulka je stejná ve všech 14 reportech.
+
+<hr>
 
 ## Detailní graf
 
